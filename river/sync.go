@@ -212,20 +212,20 @@ func (r *River) makeRequest(rule *Rule, action string, rows [][]interface{}) ([]
 func (r *River) makeInsertRequest(rule *Rule, rows [][]interface{}) ([]*elastic.BulkRequest, error) {
 	reqs := make([]*elastic.BulkRequest, 0, len(rows))
 
-  for i := 0; i < len(rows); i += 1 {
-    rowId, err := r.getDocID(rule, rows[i])
-    if err != nil {
-      return nil, errors.Trace(err)
-    }
+	for i := 0; i < len(rows); i += 1 {
+		rowId, err := r.getDocID(rule, rows[i])
+		if err != nil {
+			return nil, errors.Trace(err)
+		}
 
-    req := &elastic.BulkRequest{Index: rule.Index, Type: rule.Type, ID: rowId, Parent: ""}
-    r.makeUpdateReqDataTwo(req, rule, rows[i])
-    r.st.UpdateNum.Add(1)
+		req := &elastic.BulkRequest{Index: rule.Index, Type: rule.Type, ID: rowId, Parent: ""}
+		r.makeUpdateReqDataTwo(req, rule, rows[i])
+		r.st.UpdateNum.Add(1)
 
 		reqs = append(reqs, req)
-  }
+	}
 
-  return reqs, nil
+	return reqs, nil
 	// return r.makeRequest(rule, canal.InsertAction, rows)
 }
 
