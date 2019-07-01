@@ -219,7 +219,7 @@ func (r *River) makeInsertRequest(rule *Rule, rows [][]interface{}) ([]*elastic.
 		}
 
 		req := &elastic.BulkRequest{Index: rule.Index, Type: rule.Type, ID: rowId, Parent: ""}
-		r.makeUpdateReqDataTwo(req, rule, rows[i])
+		r.makeUpsertReqData(req, rule, rows[i])
 		r.st.UpdateNum.Add(1)
 
 		reqs = append(reqs, req)
@@ -410,7 +410,7 @@ func (r *River) makeInsertReqData(req *elastic.BulkRequest, rule *Rule, values [
 	}
 }
 
-func (r *River) makeUpdateReqDataTwo(req *elastic.BulkRequest, rule *Rule, afterValues []interface{}) {
+func (r *River) makeUpsertReqData(req *elastic.BulkRequest, rule *Rule, afterValues []interface{}) {
 	req.Data = make(map[string]interface{}, len(afterValues))
 
 	// maybe dangerous if something wrong delete before?
