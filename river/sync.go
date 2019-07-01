@@ -210,7 +210,23 @@ func (r *River) makeRequest(rule *Rule, action string, rows [][]interface{}) ([]
 }
 
 func (r *River) makeInsertRequest(rule *Rule, rows [][]interface{}) ([]*elastic.BulkRequest, error) {
-	return r.makeRequest(rule, canal.InsertAction, rows)
+	reqs := make([]*elastic.BulkRequest, 0, len(rows))
+
+  for i := 0; i < len(rows); i += 1 {
+    rowId, err := r.getDocID(rule, rows[i])
+    if err != nil {
+      return nil, errors.Trace(err)
+    }
+
+    req := &elastic.BulkRequest{Index: rule.Index, Type: rule.Type, ID: rowId, Parent: ""}
+    r.makeUpdateReqDataTwo(req, rule, rows[i])
+    r.st.UpdateNum.Add(1)
+
+		reqs = append(reqs, req)
+  }
+
+  return reqs, nil
+	// return r.makeRequest(rule, canal.InsertAction, rows)
 }
 
 func (r *River) makeDeleteRequest(rule *Rule, rows [][]interface{}) ([]*elastic.BulkRequest, error) {
@@ -391,6 +407,31 @@ func (r *River) makeInsertReqData(req *elastic.BulkRequest, rule *Rule, values [
 		if mapped == false {
 			req.Data[c.Name] = r.makeReqColumnData(&c, values[i])
 		}
+	}
+}
+
+func (r *River) makeUpdateReqDataTwo(req *elastic.BulkRequest, rule *Rule, afterValues []interface{}) {
+	req.Data = make(map[string]interface{}, len(afterValues))
+
+	// maybe dangerous if something wrong delete before?
+	req.Action = elastic.ActionUpdate
+
+	for i, c := range rule.TableInfo.Columns {
+		mapped := false
+		if !rule.CheckFilter(c.Name) {
+			continue
+		}
+		for k, v := range rule.FieldMapping {
+			mysql, elastic, fieldType := r.getFieldParts(k, v)
+			if mysql == c.Name {
+				mapped = true
+				req.Data[elastic] = r.getFieldValue(&c, fieldType, afterValues[i])
+			}
+		}
+		if mapped == false {
+			req.Data[c.Name] = r.makeReqColumnData(&c, afterValues[i])
+		}
+
 	}
 }
 
