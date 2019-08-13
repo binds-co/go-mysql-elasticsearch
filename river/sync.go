@@ -221,6 +221,16 @@ func (r *River) makeInsertRequest(rule *Rule, rows [][]interface{}) ([]*elastic.
     req := &elastic.BulkRequest{Index: rule.Index, Type: rule.Type, ID: rowId, Parent: ""}
     r.makeInsertReqData(req, rule, rows[i])
 
+    if rule.Table == "SeedMetadata" {
+      newValues := make(map[string]interface{})
+      newValues[req.Data["key"].(string)] = req.Data["value"].(string)
+      seed := req.Data["seed"]
+      req.Data = map[string]interface{}{
+        "metadata": newValues,
+        "seed": seed,
+      }
+    }
+
     if rule.DocAsUpsert {
       req.Action = elastic.ActionUpdate
     }
