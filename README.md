@@ -76,6 +76,7 @@ index = "t"
 type = "t"
 parent = "parent_id"
 id = ["id"]
+doc_as_upsert = true
 
     [rule.field]
     mysql = "title"

@@ -123,6 +123,7 @@ schema = "test"
 table = "tfilter"
 index = "test"
 type = "tfilter"
+doc_as_upsert = true # use it for doing upserts instead indexing data(which replaces in case the doc already exists)
 
 # Only sync following columns
 filter = ["id", "name"]

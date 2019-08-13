@@ -17,6 +17,7 @@ type Rule struct {
 	Type   string   `toml:"type"`
 	Parent string   `toml:"parent"`
 	ID     []string `toml:"id"`
+	DocAsUpsert bool   `toml:"doc_as_upsert"`
 
 	// Default, a MySQL table field name is mapped to Elasticsearch field name.
 	// Sometimes, you want to use different name, e.g, the MySQL file name is title,

@@ -218,14 +218,23 @@ func (r *River) makeInsertRequest(rule *Rule, rows [][]interface{}) ([]*elastic.
 			return nil, errors.Trace(err)
 		}
 
-		req := &elastic.BulkRequest{Index: rule.Index, Type: rule.Type, ID: rowId, Parent: ""}
-		r.makeUpsertReqData(req, rule, rows[i])
-		r.st.UpdateNum.Add(1)
+    req := &elastic.BulkRequest{Index: rule.Index, Type: rule.Type, ID: rowId, Parent: ""}
+    r.makeInsertReqData(req, rule, rows[i])
+
+    if rule.DocAsUpsert {
+      req.Action = elastic.ActionUpdate
+    }
+
+    if len(rule.Pipeline) > 0 {
+      req.Pipeline = rule.Pipeline
+    }
+
+    r.st.UpdateNum.Add(1)
 
 		reqs = append(reqs, req)
 	}
 
-	return reqs, nil
+  return reqs, nil
 }
 
 func (r *River) makeDeleteRequest(rule *Rule, rows [][]interface{}) ([]*elastic.BulkRequest, error) {
@@ -409,8 +418,8 @@ func (r *River) makeInsertReqData(req *elastic.BulkRequest, rule *Rule, values [
 	}
 }
 
-func (r *River) makeUpdateReqDataTwo(req *elastic.BulkRequest, rule *Rule, afterValues []interface{}) {
-	req.Data = make(map[string]interface{}, len(afterValues))
+func (r *River) makeUpdateReqDataUpsert(req *elastic.BulkRequest, rule *Rule, values []interface{}) {
+	req.Data = make(map[string]interface{}, len(values))
 
 	// maybe dangerous if something wrong delete before?
 	req.Action = elastic.ActionUpdate
@@ -424,11 +433,11 @@ func (r *River) makeUpdateReqDataTwo(req *elastic.BulkRequest, rule *Rule, after
 			mysql, elastic, fieldType := r.getFieldParts(k, v)
 			if mysql == c.Name {
 				mapped = true
-				req.Data[elastic] = r.getFieldValue(&c, fieldType, afterValues[i])
+				req.Data[elastic] = r.getFieldValue(&c, fieldType, values[i])
 			}
 		}
 		if mapped == false {
-			req.Data[c.Name] = r.makeReqColumnData(&c, afterValues[i])
+			req.Data[c.Name] = r.makeReqColumnData(&c, values[i])
 		}
 
 	}

@@ -113,6 +113,7 @@ func (r *BulkRequest) bulk(buf *bytes.Buffer) error {
 	meta[r.Action] = metaData
 
 	data, err := json.Marshal(meta)
+
 	if err != nil {
 		return errors.Trace(err)
 	}
@@ -128,6 +129,7 @@ func (r *BulkRequest) bulk(buf *bytes.Buffer) error {
 			"doc": r.Data,
       "doc_as_upsert": true,
 		}
+
 		data, err = json.Marshal(doc)
 		if err != nil {
 			return errors.Trace(err)
